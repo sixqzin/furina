@@ -1,2 +1,0 @@
-# furina
-bot
