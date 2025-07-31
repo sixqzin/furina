@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Licença de Uso - Furina Bot
 
 **Nome do Projeto:** Furina Bot  
@@ -64,3 +65,7 @@ Para dúvidas, contribuições ou permissões especiais:
 
 **© sixqzin - 2025**
 >>>>>>> 4c6c72400acb1fb02791284b210b91b122672307
+=======
+# furina
+bot
+>>>>>>> f7ca0af3e323625e931c265aeef97e29e5367618
