@@ -1,11 +1,8 @@
 /**
  * Utilitário para lidar com erros "Bad MAC"
- * que são comuns em bots WhatsApp usando Baileys.
+ * comuns em bots WhatsApp usando Baileys.
  *
- * Este módulo fornece funções para detectar, contar
- * e lidar graciosamente com esses erros.
- *
- * @author Dev Gui
+ * @author Dev Gui + Ajustado por ChatGPT
  */
 const { errorLog, warningLog, infoLog } = require("./logger");
 const path = require("node:path");
@@ -40,22 +37,16 @@ class BadMacHandler {
 
   clearProblematicSessionFiles() {
     try {
-      const baileysFolder = path.resolve(
-        process.cwd(),
-        "assets",
-        "auth",
-        "baileys"
-      );
+      const baileysFolder = path.resolve(process.cwd(), "assets", "auth", "baileys");
 
-      if (!fs.existsSync(baileysFolder)) {
-        return false;
-      }
+      if (!fs.existsSync(baileysFolder)) return false;
 
       const files = fs.readdirSync(baileysFolder);
       let removedCount = 0;
 
       for (const file of files) {
         const filePath = path.join(baileysFolder, file);
+
         if (fs.statSync(filePath).isFile()) {
           if (
             file.includes("app-state-sync-key") ||
@@ -79,15 +70,37 @@ class BadMacHandler {
       }
 
       if (removedCount > 0) {
-        warningLog(
-          `${removedCount} arquivos de sessão problemáticos removidos. Credenciais principais preservadas.`
-        );
+        warningLog(`${removedCount} arquivos de sessão problemáticos removidos.`);
         return true;
       }
 
       return false;
     } catch (error) {
       errorLog(`Erro ao limpar arquivos de sessão: ${error.message}`);
+      return false;
+    }
+  }
+
+  clearAllSessionsButKeepCreds() {
+    try {
+      const authFolder = path.resolve(process.cwd(), "assets", "auth", "baileys");
+
+      if (!fs.existsSync(authFolder)) return false;
+
+      const files = fs.readdirSync(authFolder);
+
+      for (const file of files) {
+        if (file === "creds.json" || file.includes("app-state-sync-key")) continue;
+
+        const filePath = path.join(authFolder, file);
+        fs.unlinkSync(filePath);
+        infoLog(`🧹 Sessão limpa: ${file}`);
+      }
+
+      warningLog("⚠️ Todas as sessões foram limpas (exceto login).");
+      return true;
+    } catch (err) {
+      errorLog(`Erro limpando sessões: ${err.message}`);
       return false;
     }
   }
@@ -108,9 +121,7 @@ class BadMacHandler {
     this.lastReset = Date.now();
 
     if (previousCount > 0) {
-      warningLog(
-        `Reset do contador de Bad MAC errors. Contador anterior: ${previousCount}`
-      );
+      warningLog(`🔄 Reset do contador de Bad MAC. Contador anterior: ${previousCount}`);
     }
   }
 
@@ -119,23 +130,18 @@ class BadMacHandler {
   }
 
   handleError(error, context = "unknown") {
-    if (!this.isBadMacError(error)) {
-      return false;
-    }
+    if (!this.isBadMacError(error)) return false;
 
-    errorLog(`Bad MAC error detectado em ${context}: ${error.message}`);
+    errorLog(`Bad MAC detectado em ${context}: ${error.message}`);
     this.incrementErrorCount();
 
     if (this.hasReachedLimit()) {
-      warningLog(
-        `Limite de Bad MAC errors atingido (${this.maxRetries}). Considere reiniciar o bot.`
-      );
+      this.clearAllSessionsButKeepCreds(); // 💥 nova limpeza total
+      warningLog(`💣 Limite de erros atingido, sessões foram limpas.`);
       return true;
     }
 
-    warningLog(
-      `Ignorando Bad MAC error e continuando operação... (${this.errorCount}/${this.maxRetries})`
-    );
+    warningLog(`Ignorando Bad MAC... (${this.errorCount}/${this.maxRetries})`);
     return true;
   }
 
@@ -144,9 +150,7 @@ class BadMacHandler {
       try {
         return await fn(...args);
       } catch (error) {
-        if (this.handleError(error, context)) {
-          return null;
-        }
+        if (this.handleError(error, context)) return null;
         throw error;
       }
     };
@@ -157,10 +161,7 @@ class BadMacHandler {
       errorCount: this.errorCount,
       maxRetries: this.maxRetries,
       lastReset: new Date(this.lastReset).toISOString(),
-      timeUntilReset: Math.max(
-        0,
-        this.resetInterval - (Date.now() - this.lastReset)
-      ),
+      timeUntilReset: Math.max(0, this.resetInterval - (Date.now() - this.lastReset)),
     };
   }
 }

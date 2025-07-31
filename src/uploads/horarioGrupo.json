@@ -1,0 +1,4 @@
+{
+  "horarioFechar": "0 0 * * *",
+  "horarioAbrir": "0 7 * * *"
+}

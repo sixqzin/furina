@@ -1,66 +1,38 @@
 const { PREFIX } = require(`${BASE_DIR}/config`);
 const { InvalidParameterError, WarningError } = require(`${BASE_DIR}/errors`);
-const {
-  activateWelcomeGroup,
-  deactivateWelcomeGroup,
-  isActiveWelcomeGroup,
-} = require(`${BASE_DIR}/utils/database`);
+const fs = require("fs");
+const path = require("path");
+
+const statusPath = path.join(__dirname, "../../uploads/welcome/status.json");
+
+function saveWelcomeStatus(groupId, isActive) {
+  const status = fs.existsSync(statusPath)
+    ? JSON.parse(fs.readFileSync(statusPath, "utf-8"))
+    : {};
+  status[groupId] = isActive;
+  fs.mkdirSync(path.dirname(statusPath), { recursive: true });
+  fs.writeFileSync(statusPath, JSON.stringify(status, null, 2));
+}
 
 module.exports = {
   name: "welcome",
-  description: "Ativo/desativo o recurso de boas-vindas no grupo.",
+  description: "Ativa ou desativa a mensagem de boas-vindas estilo Furina.",
   commands: [
-    "welcome",
-    "bemvindo",
-    "boasvinda",
-    "boasvindas",
-    "boavinda",
-    "boavindas",
-    "welkom",
-    "welkon",
+    "welcome", "bemvindo", "boasvinda", "boasvindas"
   ],
   usage: `${PREFIX}welcome (1/0)`,
-  /**
-   * @param {CommandHandleProps} props
-   * @returns {Promise<void>}
-   */
   handle: async ({ args, sendReply, sendSuccessReact, remoteJid }) => {
-    if (!args.length) {
-      throw new InvalidParameterError(
-        "Você precisa digitar 1 ou 0 (ligar ou desligar)!"
-      );
-    }
+    if (!args.length || !["1", "0"].includes(args[0]))
+      throw new InvalidParameterError("Use 1 para ativar ou 0 para desativar o sistema de boas-vindas.");
 
-    const welcome = args[0] === "1";
-    const notWelcome = args[0] === "0";
+    const ativar = args[0] === "1";
 
-    if (!welcome && !notWelcome) {
-      throw new InvalidParameterError(
-        "Você precisa digitar 1 ou 0 (ligar ou desligar)!"
-      );
-    }
-
-    const hasActive = welcome && isActiveWelcomeGroup(remoteJid);
-    const hasInactive = notWelcome && !isActiveWelcomeGroup(remoteJid);
-
-    if (hasActive || hasInactive) {
-      throw new WarningError(
-        `O recurso de boas-vindas já está ${
-          welcome ? "ativado" : "desativado"
-        }!`
-      );
-    }
-
-    if (welcome) {
-      activateWelcomeGroup(remoteJid);
-    } else {
-      deactivateWelcomeGroup(remoteJid);
-    }
+    saveWelcomeStatus(remoteJid, ativar);
 
     await sendSuccessReact();
-
-    const context = welcome ? "ativado" : "desativado";
-
-    await sendReply(`Recurso de boas-vindas ${context} com sucesso!`);
+    const msg = ativar
+      ? "💧 Sistema de boas-vindas da *Furina* foi *ativado* com sucesso!"
+      : "💧 Sistema de boas-vindas da *Furina* foi *desativado* com sucesso!";
+    await sendReply(msg);
   },
 };

@@ -41,26 +41,61 @@ exports.dynamicCommand = async (paramsHandler, startProcess) => {
     webMessage,
   } = paramsHandler;
 
-  if (isActiveAntiLinkGroup(remoteJid) && isLink(fullMessage)) {
-    if (!userJid) return;
+  // Normaliza o userJid somente se definido e string
+  let normalizedUserJid;
+  if (typeof userJid === "string") {
+    normalizedUserJid = userJid.includes("@")
+      ? userJid
+      : userJid + "@s.whatsapp.net";
+  } else {
+    normalizedUserJid = undefined;
+  }
 
-    if (!(await isAdmin({ remoteJid, userJid, socket }))) {
-      await socket.groupParticipantsUpdate(remoteJid, [userJid], "remove");
+  // Inicializa isGroupAdmin como falso
+  let isGroupAdmin = false;
 
-      await sendReply(
-        "Anti-link ativado! Você foi removido por enviar um link!"
+  // Só tenta buscar participantes se dados existirem
+  if (remoteJid && normalizedUserJid && socket) {
+    try {
+      const metadata = await socket.groupMetadata(remoteJid);
+      const participants = metadata.participants;
+      isGroupAdmin = participants.some(
+        (p) =>
+          p.id === normalizedUserJid &&
+          (p.admin === "admin" || p.admin === "superadmin")
       );
+    } catch (e) {
+      console.error("[Erro ao verificar admin]", e);
+    }
+  }
 
-      await socket.sendMessage(remoteJid, {
-        delete: {
-          remoteJid,
-          fromMe: false,
-          id: webMessage.key.id,
-          participant: webMessage.key.participant,
-        },
-      });
+  // Verifica anti-link protegendo contra undefined e erros
+  if (
+    typeof isActiveAntiLinkGroup === "function" &&
+    remoteJid &&
+    fullMessage &&
+    webMessage &&
+    normalizedUserJid
+  ) {
+    if (isActiveAntiLinkGroup(remoteJid) && isLink(fullMessage)) {
+      if (!isGroupAdmin) {
+        await socket.groupParticipantsUpdate(remoteJid, [normalizedUserJid], "remove");
 
-      return;
+        await sendReply(
+          "Anti-link ativado! Você foi removido por enviar um link!"
+        );
+
+        await socket.sendMessage(remoteJid, {
+          delete: {
+            remoteJid,
+            fromMe: false,
+            id: webMessage.key.id,
+            participant: webMessage.key.participant,
+          },
+        });
+
+        return;
+      }
     }
   }
 
@@ -95,11 +130,22 @@ exports.dynamicCommand = async (paramsHandler, startProcess) => {
     return;
   }
 
+  // Extrai sender e mencionados do webMessage
+  const sender =
+    webMessage?.key?.participant || webMessage?.key?.remoteJid || userJid;
+  const mentionedJid =
+    webMessage?.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+
   try {
     await command.handle({
       ...paramsHandler,
       type,
+      isGroupAdmin,
       startProcess,
+
+      message: webMessage,
+      userJid: sender,
+      mentionedJid,
     });
   } catch (error) {
     if (badMacHandler.handleError(error, `command:${command.name}`)) {

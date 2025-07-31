@@ -1,7 +1,7 @@
 /**
  * Melhorado por: Mkg
  *
- * @author Dev Gui
+ * @author Dev sqxzn
  */
 const { PREFIX } = require(`${BASE_DIR}/config`);
 
@@ -15,24 +15,23 @@ module.exports = {
    * @param {CommandHandleProps} props
    * @returns {Promise<void>}
    */
-  handle: async ({ sendReply, sendReact, startProcess, fullMessage }) => {
-    const response = fullMessage.slice(1).startsWith("ping")
-      ? "🏓 Pong!"
-      : "🏓 Ping!";
-
-    await sendReact("🏓");
+  handle: async ({ sendReply, sendReact, startProcess }) => {
+    await sendReact("🌊");
 
     const uptime = process.uptime();
-
     const h = Math.floor(uptime / 3600);
     const m = Math.floor((uptime % 3600) / 60);
     const s = Math.floor(uptime % 60);
 
     const ping = Date.now() - startProcess;
 
-    await sendReply(`${response}
+    await sendReply(`🌌🐚 *Furina ouve as correntes do mar digital...*
 
-📶 Velocidade de resposta: ${ping}ms
-⏱️ Uptime: ${h}h ${m}m ${s}s`);
+📡 *Latência das ondas:* ~ *${ping}ms*  
+⏳ *Ritmo das marés (atividade):* *${h}h ${m}m ${s}s*  
+💠 *Estado da corrente:* *Estável e harmônica*
+
+As águas ecoam com serenidade...  
+Furina sorri — o oceano está em paz. 🌊✨`);
   },
 };

@@ -1,22 +1,22 @@
-const { PREFIX, ASSETS_DIR } = require(`${BASE_DIR}/config`);
-const { menuMessage } = require(`${BASE_DIR}/menu`);
-const path = require("path");
-
 module.exports = {
-  name: "menu",
-  description: "Menu de comandos",
-  commands: ["menu", "help"],
-  usage: `${PREFIX}menu`,
-  /**
-   * @param {CommandHandleProps} props
-   * @returns {Promise<void>}
-   */
-  handle: async ({ sendImageFromFile, sendSuccessReact }) => {
-    await sendSuccessReact();
+  commands: ["menu"],
+  description: "Mostra o menu com botões",
+  type: "member",
 
-    await sendImageFromFile(
-      path.join(ASSETS_DIR, "images", "takeshi-bot.png"),
-      `\n\n${menuMessage()}`
-    );
-  },
-};
+  handle: async ({ socket, remoteJid, message }) => {
+    try {
+      const msg = {
+        text: "📋 *Menu principal*\nEscolha uma opção abaixo:",
+        buttons: [
+          { buttonId: "/ping", buttonText: { displayText: "/ping" }, type: 1 },
+          { buttonId: "/perfil", buttonText: { displayText: "/perfil" }, type: 1 },
+        ],
+        headerType: 1
+      }
+
+      await socket.sendMessage(remoteJid, msg, { quoted: message });
+    } catch (err) {
+      console.error("Erro ao enviar botão:", err);
+    }
+  }
+}

@@ -42,7 +42,7 @@ module.exports = {
 
     await sendGifFromFile(
       path.resolve(ASSETS_DIR, "images", "funny", "hug-darker-than-black.mp4"),
-      `@${userNumber} deu um abraço apaixonante em @${targetNumber}!`,
+      `@${userNumber} deu um abraço em @${targetNumber}!`,
       [userJid, targetJid]
     );
   },
