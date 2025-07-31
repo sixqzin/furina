@@ -15,7 +15,7 @@ Este projeto está sob uma **licença personalizada**. Leia atentamente os termo
 - ❌ **Uso comercial proibido:** É **estritamente proibido** utilizar este projeto, ou qualquer modificação dele, para fins comerciais ou com intenção de lucro.
 - 🧾 **Créditos obrigatórios:** Sempre mencione **sixqzin** como autor original ao usar ou modificar o código.
 
-🔗 [Clique aqui para ver a licença completa](./LICENSE.md)
+🔗 [Clique aqui para ver a licença completa](./LICENSE)
 
 ---
 
