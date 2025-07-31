@@ -1,3 +1,6 @@
+![Licença - Uso Não Comercial](https://img.shields.io/badge/Licen%C3%A7a-N%C3%A3o%20Comercial-red)  
+🔗 [Ver Licença](./LICENSE.md)
+
 # Furina Bot - WhatsApp
 
 Furina Bot é um projeto de bot para WhatsApp desenvolvido por **sixqzin** com fins educacionais e pessoais. Este repositório contém o código-fonte do bot, pronto para ser estudado, modificado e utilizado em projetos não comerciais.
